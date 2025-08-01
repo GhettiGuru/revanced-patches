@@ -15,6 +15,10 @@ patches {
 dependencies {
     // Used by JsonGenerator.
     implementation(libs.gson)
+    implementation(libs.revanced.patcher)
+    ksp(libs.revanced.processor) // optional if using KSP annotations
+    compileOnly(libs.revanced.annotations)
+    implementation(libs.revanced.smali) 
 }
 
 tasks {
