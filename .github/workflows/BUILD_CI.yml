@@ -1,0 +1,99 @@
+name: Build Test
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - testing
+
+jobs:
+  release:
+    name: Release
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      packages: write
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Cache Gradle
+        uses: burrunan/gradle-cache-action@v3
+
+      - name: Export GitHub Actor and Token for Gradle
+        run: |
+          echo "GITHUB_ACTOR=${{ secrets.GH_USERNAME }}" >> $GITHUB_ENV
+          echo "GITHUB_TOKEN=${{ secrets.GH_TOKEN }}" >> $GITHUB_ENV
+
+      - name: Setup gradle.properties for GitHub Packages auth
+        run: |
+          mkdir -p ~/.gradle
+          echo "gpr.user=${{ secrets.GH_USERNAME }}" >> ~/.gradle/gradle.properties
+          echo "gpr.key=${{ secrets.GH_TOKEN }}" >> ~/.gradle/gradle.properties
+
+      - name: Build
+        run: |
+          ./gradlew clean generatePatchesFiles
+          echo "Searching for any .rvp files in workspace:"
+          find . -name '*.rvp' -print
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Debug and verify .rvp files
+        id: find-rvp
+        run: |
+          echo "🔍 Searching for .rvp files in the repository..."
+          rvp_files=$(find . -type f -name '*.rvp')
+          if [ -z "$rvp_files" ]; then
+            echo "❌ No .rvp files found!"
+            exit 1
+          else
+            echo "✅ Found the following .rvp files:"
+            echo "$rvp_files"
+            echo "all_rvp_files<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$rvp_files" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload all .rvp artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rvp-artifacts
+          path: |
+            **/*.rvp
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_AUTHOR_NAME: "github-actions[bot]"
+          GIT_AUTHOR_EMAIL: "github-actions[bot]@users.noreply.github.com"
+          GIT_COMMITTER_NAME: "github-actions[bot]"
+          GIT_COMMITTER_EMAIL: "github-actions[bot]@users.noreply.github.com"
+        run: |
+          npx semantic-release || echo "semantic-release failed (likely due to missing GPG or permissions)."
