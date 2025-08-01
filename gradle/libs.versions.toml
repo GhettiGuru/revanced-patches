@@ -21,7 +21,6 @@ antlr4 = "4.13.2"
 nanohttpd = "2.3.1"
 apksig = "8.10.1"
 regex = "1.1.11"
-revanced-patcher = "21.0.0"
 revanced-annotations = "1.0.0"
 revanced-smali = "0.0.6" # if you use smali instructions
 
