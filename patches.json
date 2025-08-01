@@ -3614,4 +3614,57 @@
     },
     "options": []
   }
+
+[
+  {
+    "name": "TitanPremiumPatch",
+    "description": "Spoofs premium values for 光速虚拟机 (com.vphonegaga.titan): enables VIP, tokens, coins, disables onDestroy, etc.",
+    "compatiblePackages": [
+      {
+        "name": "com.vphonegaga.titan"
+      }
+    ],
+    "excludedPackages": [],
+    "dependencies": [],
+    "patchOptions": [
+      {
+        "id": "forceVip",
+        "type": "boolean",
+        "default": true,
+        "description": "Force VIP mode (isVip = true)"
+      },
+      {
+        "id": "forceAdvanceFeatures",
+        "type": "boolean",
+        "default": true,
+        "description": "Enable advanced features (isEnableAccAdvanceFeatures = true)"
+      },
+      {
+        "id": "spoofToken",
+        "type": "string",
+        "default": "spoofed_token_premium_123",
+        "description": "Spoof token value"
+      },
+      {
+        "id": "unlimitedCoins",
+        "type": "int",
+        "default": 999999,
+        "description": "Spoof coin amount"
+      },
+      {
+        "id": "patchTokenExpire",
+        "type": "boolean",
+        "default": true,
+        "description": "Patch token expiration to never expire"
+      },
+      {
+        "id": "disableOnDestroy",
+        "type": "boolean",
+        "default": true,
+        "description": "Disable onDestroy() in various classes"
+      }
+    ]
+  }
+]
+
 ]
